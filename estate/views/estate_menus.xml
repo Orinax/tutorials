@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_main_estate"
+              name="Real Estate"
+              sequence="80"
+    >
+        <menuitem id="menu_Advertisements"
+                  name="Advertisements"
+        >
+            <menuitem id="estate_property_menu_action"
+                      action="estate_property_action"
+            />
+        </menuitem>
+    </menuitem>
+</odoo>
