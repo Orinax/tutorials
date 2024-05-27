@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 class Property(models.Model):
     _name = "estate.property"
@@ -27,4 +27,19 @@ class Property(models.Model):
     buyer_id = fields.Many2one("res.partner", string="Buyer", copy=False)
     user_id = fields.Many2one("res.users", string="Salesperson", default=lambda self: self.env.user)
     tag_ids = fields.Many2many("estate.property.tag", string="Tags")
-    offer_ids = fields.One2many("estate.property.offer", "property_id", string="Offers")
+    offer_ids = fields.One2many("estate.property.offer", "property_id", string="")
+    total_area = fields.Float(string="Total Area", compute="_compute_total_area")
+    best_price = fields.Float(string="Best Offer", compute="_compute_best_offer")
+
+# -------------------------------------------------------------------------
+# COMPUTE METHODS
+# -------------------------------------------------------------------------
+
+    @api.depends("living_area", "garden_area")
+    def _compute_total_area(self):
+        for record in self:
+            record.total_area = record.living_area + record.garden_area
+
+    @api.depends("offer_ids.price")
+    def _compute_best_offer(self):
+        
