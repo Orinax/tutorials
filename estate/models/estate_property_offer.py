@@ -9,7 +9,7 @@ class Property(models.Model):
     partner_id = fields.Many2one('res.partner', string="Buyer", required=True)
     property_id = fields.Many2one('estate.property', string="Property Name", required=True)
     validity = fields.Integer(string="Validity (days)", default=7)
-    date_deadline = fields.Date(string="Deadline", compute="_compute_date_deadline", default=fields.Datetime.add(fields.Datetime.today(), days=+7))
+    date_deadline = fields.Date(string="Deadline", compute="_compute_date_deadline", inverse="_inverse_date_deadline", default=fields.Datetime.add(fields.Datetime.today(), days=+7))
 
 # -------------------------------------------------------------------------
 # COMPUTE METHODS
@@ -19,3 +19,8 @@ class Property(models.Model):
     def _compute_date_deadline(self):
         for record in self:
             record.date_deadline = fields.Datetime.add(fields.Datetime.today(), days=+record.validity)
+
+    def _inverse_date_deadline(self):
+        for record in self:
+            updated_validity = record.date_deadline - fields.Date.today()
+            record.validity = updated_validity.days
