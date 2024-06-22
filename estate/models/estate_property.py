@@ -1,4 +1,6 @@
 from odoo import api, exceptions, fields, models
+from odoo.exceptions import UserError
+
 
 class Property(models.Model):
     _name = "estate.property"
@@ -10,7 +12,8 @@ class Property(models.Model):
     postcode = fields.Char(string="Postcode", required=True)
     date_availability = fields.Date(string="Date Availability", required=True, copy=False, default=fields.Datetime.add(fields.Datetime.today(), months=+3))
     expected_price = fields.Float(string="Expected Price", required=True)
-    selling_price = fields.Float(string="Selling Price", required=False, copy=False, readonly=True)
+    selling_price = fields.Float(string="Selling Price", required=False, copy=False, readonly=True,
+                                 compute="_compute_selling_price")
     bedrooms = fields.Integer(string="Bedrooms", default=2, required=True)
     living_area = fields.Integer(string="Living Area (sqm)", required=True)
     facades = fields.Integer(string="Facades")
@@ -53,6 +56,13 @@ class Property(models.Model):
         for record in self:
             record.best_price = max(record.offer_ids.mapped("price"), default=None)
 
+    # Need to figure out how to pull / set values from other models
+    # a change made in the offer view needs to make the main property view change.
+    @api.depends("offer_ids.status")
+    def _compute_selling_price(self):
+        for record in self:
+            if record.offer_ids == 'accepted':
+                record.selling_price = 222
 
 # -------------------------------------------------------------------------
 # ON CHANGE METHODS
@@ -73,13 +83,16 @@ class Property(models.Model):
 
     def mark_property_sold(self):
         for record in self:
-            if record.state == 'sold':
-                raise exceptions.UserError("Canceled properties cannot be sold.")
+            if record.state == 'canceled':
+                raise UserError("Canceled properties cannot be sold.")
             else:
                 record.state = 'sold'
         return True
 
     def cancel_property(self):
         for record in self:
-            record.state = 'canceled'
+            if record.state == 'sold':
+                raise UserError("Sold properties cannot be canceled.")
+            else:
+                record.state = 'canceled'
         return True
